@@ -1,40 +1,37 @@
-const db = require("../Config/ConnectToDB");
+const Card = require("../Model/Cardmodel");
 
-const submitCard = (req, res) => {
-  const { card_type, card_code, amount, email } = req.body;
+const submitCard = async (req, res) => {
+  try {
+    const { card_type, card_code, amount, email } = req.body;
 
-  const sql = `
-    INSERT INTO card_submissions
-    (card_type, card_code, amount, email)
-    VALUES (?, ?, ?, ?)
-  `;
+    const card = await Card.create({
+      card_type,
+      card_code,
+      amount,
+      email,
+    });
 
-  db.query(
-    sql,
-    [card_type, card_code, amount, email],
-    (err, result) => {
-      if (err) {
-        return res.status(500).json(err);
-      }
-
-      res.status(201).json({
-        message: "Card submitted successfully",
-      });
-    }
-  );
+    res.status(201).json({
+      message: "Card submitted successfully",
+      card,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
 };
 
-const getAllCards = (req, res) => {
-  db.query(
-    "SELECT * FROM card_submissions ORDER BY id DESC",
-    (err, result) => {
-      if (err) {
-        return res.status(500).json(err);
-      }
+const getAllCards = async (req, res) => {
+  try {
+    const cards = await Card.find().sort({ createdAt: -1 });
 
-      res.json(result);
-    }
-  );
+    res.status(200).json(cards);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
 };
 
 module.exports = {
